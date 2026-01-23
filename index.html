@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Catálogo TherrA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background:#f5f7fa; }
+    header { background:#0b2e4f; color:white; padding:15px 20px; display:flex; align-items:center; gap:15px; }
+    header img { height:40px; }
+    header h1 { font-size:20px; margin:0; }
+    .filters { padding:15px; background:white; display:flex; flex-wrap:wrap; gap:10px; }
+    .filters input, .filters select { padding:8px; font-size:14px; }
+    .grid { padding:15px; display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:15px; }
+    .card { background:white; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); padding:12px; display:flex; flex-direction:column; }
+    .card img { width:100%; height:160px; object-fit:contain; background:#fafafa; border-radius:6px; }
+    .card h3 { margin:8px 0 4px; font-size:16px; }
+    .card p { margin:3px 0; font-size:13px; }
+    .tag { background:#e3eef9; color:#0b2e4f; display:inline-block; padding:2px 6px; border-radius:4px; font-size:11px; }
+    .btn { margin-top:auto; background:#25d366; color:white; text-align:center; padding:8px; border-radius:6px; text-decoration:none; font-weight:bold; }
+    footer { text-align:center; padding:15px; font-size:12px; color:#777; }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="https://therra.co/wp-content/uploads/2025/11/cropped-logotherrabbb.png" alt="TherrA">
+  <h1>Catálogo de Productos - TherrA</h1>
+</header>
+
+<div class="filters">
+  <input type="text" id="search" placeholder="Buscar referencia o descripción">
+  <select id="catFilter"></select>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<footer>
+  © TherrA - www.therra.co
+</footer>
+
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbyfjugBz1Q25J7aW4fu7ub9zimYKN9IwT8Llq16wYr5k8uaLcBuViWjkLaF47cQpOZyLQ/exec";
+const WHATSAPP_NUMBER = "573004847428";
+
+let allData = [];
+
+async function loadData() {
+  const res = await fetch(API_URL);
+  let data = await res.json();
+
+  // Filtros de negocio:
+allData = data; // sin filtros por ahora
+
+
+  renderFilters();
+  renderGrid();
+}
+
+function renderFilters() {
+  const catSet = new Set(allData.map(d => d['CATEGORÍA']).filter(Boolean));
+  document.getElementById('catFilter').innerHTML =
+    '<option value="">Todas las categorías</option>' +
+    [...catSet].map(c => `<option value="${c}">${c}</option>`).join('');
+
+  document.getElementById('catFilter').onchange = renderGrid;
+  document.getElementById('search').oninput = renderGrid;
+}
+
+function cleanText(value) {
+  if (!value) return '';
+  return String(value)
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function renderGrid() {
+  const cat = document.getElementById('catFilter').value;
+  const q = document.getElementById('search').value.toLowerCase();
+
+  const filtered = allData.filter(d =>
+    (!cat || d['CATEGORÍA'] === cat) &&
+    (!q || ((d['DESCRIPCIÓN'] + d['REFERENCIA']).toLowerCase().includes(q)))
+  );
+
+  const grid = document.getElementById('grid');
+  grid.innerHTML = filtered.map(item => {
+    const msg = `Hola, estoy interesado en el producto ${item['REFERENCIA']} - ${item['DESCRIPCIÓN']}`;
+    const waLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+
+    return `
+      <div class="card">
+        <img src="${item['IMAGEN'] || 'https://via.placeholder.com/300x200?text=Sin+Imagen'}">
+        <span class="tag">${cleanText(item['CATEGORÍA'])}</span>
+        <h3>${cleanText(item['DESCRIPCIÓN'])}</h3>
+        <p><b>Referencia:</b> ${cleanText(item['REFERENCIA'])}</p>
+        <p><b>Cavidades:</b> ${item['CAVIDADES'] || ''}</p>
+        <p><b>Ciclo estándar:</b> ${item['CICLO ESTÁNDAR'] || ''}</p>
+        <p><b>Peso:</b> ${item['PESO'] || ''}</p>
+        <a class="btn" href="${waLink}" target="_blank">Consultar por WhatsApp</a>
+      </div>
+    `;
+  }).join('');
+}
+
+loadData();
+</script>
+
+
+</body>
+</html>
