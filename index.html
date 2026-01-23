@@ -41,8 +41,8 @@
 
 
 <script>
-const API_URL = "https://api.allorigins.win/raw?url=" + encodeURIComponent("https://script.google.com/macros/s/AKfycbfjugBz1Q25J7aW4fu7ub9zimYKN9IwT8Llq16wYr5k8uaLcBuViWjkLaF47cQpOZyLQ/exec");
-
+const API_URL =
+  "https://script.google.com/macros/s/AKfycbwO-EJrvFYIttP_gwQlIj0EPjZWRg2qmdyTRIWTbfb3C68apWReNy9sK3KytG0kI4jNQA/exec";
 
 function normalizeKey(key) {
   return key
@@ -55,9 +55,15 @@ function normalizeKey(key) {
 async function loadData() {
   try {
     const res = await fetch(API_URL);
-    const raw = await res.json();
+    const text = await res.text();
+    console.log("RAW TEXT:", text);
 
-    console.log("RAW:", raw);
+    const raw = JSON.parse(text);
+    console.log("RAW JSON:", raw);
+
+    if (!Array.isArray(raw)) {
+      throw new Error("La API no devolvió un array");
+    }
 
     const data = raw.map(row => {
       const obj = {};
@@ -70,9 +76,13 @@ async function loadData() {
     console.log("NORMALIZED:", data);
 
     const grid = document.getElementById("grid");
+    grid.innerHTML = "";
 
-    grid.innerHTML = data.map(item => `
-      <div class="card">
+    data.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      card.innerHTML = `
         <img src="${item.IMAGEN || ''}">
         <span class="tag">${item.CATEGORIA || ''}</span>
         <h3>${item.DESCRIPCION || 'SIN DESCRIPCIÓN'}</h3>
@@ -84,12 +94,15 @@ async function loadData() {
            )}">
            WhatsApp
         </a>
-      </div>
-    `).join("");
+      `;
+
+      grid.appendChild(card);
+    });
 
   } catch (err) {
     console.error("FETCH ERROR:", err);
-    document.body.innerHTML = "<h2>Error cargando datos</h2><pre>" + err + "</pre>";
+    document.body.innerHTML =
+      "<h2>Error cargando datos</h2><pre>" + err + "</pre>";
   }
 }
 
@@ -97,5 +110,7 @@ loadData();
 </script>
 
 
+
 </body>
 </html>
+
