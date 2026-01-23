@@ -83,7 +83,10 @@ async function loadData() {
       card.className = "card";
 
       card.innerHTML = `
-        <img src="${item.IMAGEN || ''}">
+        <img src="${fixDriveUrl(item.IMAGEN)}"
+        	loading="lazy"
+        	referrerpolicy="no-referrer"
+        	onerror="this.onerror=null;this.src='https://via.placeholder.com/300x200?text=Imagen+no+disponible';">
         <span class="tag">${item.CATEGORIA || ''}</span>
         <h3>${item.DESCRIPCION || 'SIN DESCRIPCIÓN'}</h3>
         <p><b>Referencia:</b> ${item.REFERENCIA || ''}</p>
@@ -104,6 +107,16 @@ async function loadData() {
     document.body.innerHTML =
       "<h2>Error cargando datos</h2><pre>" + err + "</pre>";
   }
+function fixDriveUrl(url) {
+  if (!url) return "";
+
+  const match = url.match(/[-\w]{25,}/);
+  if (!match) return url;
+
+  // Este dominio sirve la imagen como imagen real (no HTML)
+  return "https://lh3.googleusercontent.com/d/" + match[0];
+}
+
 }
 
 loadData();
@@ -113,4 +126,5 @@ loadData();
 
 </body>
 </html>
+
 
