@@ -4,76 +4,190 @@
   <meta charset="UTF-8">
   <title>Catálogo TherrA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Google Font elegante -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background:#f5f7fa; }
-    header { background:#0b2e4f; color:white; padding:15px 20px; display:flex; align-items:center; gap:15px; }
-    header img { height:40px; }
-    header h1 { font-size:20px; margin:0; }
-    .filters { padding:15px; background:white; display:flex; flex-wrap:wrap; gap:10px; }
-    .filters input, .filters select { padding:8px; font-size:14px; }
-    .grid { padding:15px; display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:15px; }
-    .card { background:white; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); padding:12px; display:flex; flex-direction:column; }
-    .card img { width:100%; height:160px; object-fit:contain; background:#fafafa; border-radius:6px; }
-    .card h3 { margin:8px 0 4px; font-size:16px; }
-    .card p { margin:3px 0; font-size:13px; }
-    .tag { background:#e3eef9; color:#0b2e4f; display:inline-block; padding:2px 6px; border-radius:4px; font-size:11px; }
-    .btn { margin-top:auto; background:#25d366; color:white; text-align:center; padding:8px; border-radius:6px; text-decoration:none; font-weight:bold; }
-    footer { text-align:center; padding:15px; font-size:12px; color:#777; }
+    :root {
+      --cream: #f6f3ef;
+      --dark: #1f2933;
+      --muted: #6b7280;
+      --accent: #25d366;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: var(--cream);
+      color: var(--dark);
+    }
+
+    header {
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    header img {
+      height: 42px;
+    }
+
+    header h1 {
+      font-size: 18px;
+      font-weight: 500;
+      margin: 0;
+      letter-spacing: 0.5px;
+    }
+
+    .grid {
+      padding: 32px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 28px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 18px;
+      overflow: hidden;
+      position: relative;
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 18px 40px rgba(0,0,0,.08);
+    }
+
+    .image-wrap {
+      position: relative;
+      background: #fafafa;
+      aspect-ratio: 1 / 1;
+    }
+
+    .image-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      padding: 18px;
+    }
+
+    .whatsapp {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity .25s ease;
+    }
+
+    .card:hover .whatsapp {
+      opacity: 1;
+    }
+
+    .whatsapp a {
+      background: var(--accent);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .content {
+      padding: 18px 20px 22px;
+    }
+
+    .tag {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    h3 {
+      font-size: 15px;
+      font-weight: 500;
+      margin: 0 0 6px;
+    }
+
+    .meta {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    footer {
+      text-align: center;
+      padding: 28px;
+      font-size: 12px;
+      color: #999;
+    }
+
+    /* Mobile: mostrar WhatsApp al tocar */
+    @media (hover: none) {
+      .whatsapp {
+        opacity: 1;
+        background: linear-gradient(to top, rgba(0,0,0,.6), transparent);
+        align-items: flex-end;
+        padding-bottom: 16px;
+      }
+    }
   </style>
 </head>
+
 <body>
 
 <header>
   <img src="https://therra.co/wp-content/uploads/2025/11/cropped-logotherrabbb.png" alt="TherrA">
-  <h1>Catálogo de Productos - TherrA</h1>
+  <h1>Catálogo de Herrajes</h1>
 </header>
-
-<div class="filters">
-  <input type="text" id="search" placeholder="Buscar referencia o descripción">
-  <select id="catFilter"></select>
-</div>
 
 <div class="grid" id="grid"></div>
 
 <footer>
-  © TherrA - www.therra.co
+  © TherrA · Moda & Herrajes Premium
 </footer>
-
 
 <script>
 const API_URL =
   "https://script.google.com/macros/s/AKfycbwO-EJrvFYIttP_gwQlIj0EPjZWRg2qmdyTRIWTbfb3C68apWReNy9sK3KytG0kI4jNQA/exec";
 
 function normalizeKey(key) {
-  return key
-    .normalize("NFD")
+  return key.normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/\s+/g, "_")
     .toUpperCase();
 }
 
+function fixDriveUrl(url) {
+  if (!url) return "";
+  const match = url.match(/[-\w]{25,}/);
+  if (!match) return url;
+  return "https://lh3.googleusercontent.com/d/" + match[0];
+}
+
 async function loadData() {
   try {
     const res = await fetch(API_URL);
-    const text = await res.text();
-    console.log("RAW TEXT:", text);
-
-    const raw = JSON.parse(text);
-    console.log("RAW JSON:", raw);
-
-    if (!Array.isArray(raw)) {
-      throw new Error("La API no devolvió un array");
-    }
+    const raw = JSON.parse(await res.text());
 
     const data = raw.map(row => {
-      const obj = {};
-      Object.keys(row).forEach(k => {
-        obj[normalizeKey(k)] = row[k];
-      });
-      return obj;
+      const o = {};
+      Object.keys(row).forEach(k => o[normalizeKey(k)] = row[k]);
+      return o;
     });
-
-    console.log("NORMALIZED:", data);
 
     const grid = document.getElementById("grid");
     grid.innerHTML = "";
@@ -83,46 +197,39 @@ async function loadData() {
       card.className = "card";
 
       card.innerHTML = `
-        <img src="${fixDriveUrl(item.IMAGEN)}"
-        	loading="lazy"
-        	referrerpolicy="no-referrer"
-        	onerror="this.onerror=null;this.src='https://via.placeholder.com/300x200?text=Imagen+no+disponible';">
-        <span class="tag">${item.CATEGORIA || ''}</span>
-        <h3>${item.DESCRIPCION || 'SIN DESCRIPCIÓN'}</h3>
-        <p><b>Referencia:</b> ${item.REFERENCIA || ''}</p>
-        <p><b>Stock:</b> ${item.CANTIDAD_EN_STOCK || ''}</p>
-        <a class="btn" target="_blank"
-           href="https://wa.me/573004847428?text=${encodeURIComponent(
-             'Hola, me interesa la referencia ' + (item.REFERENCIA || '')
-           )}">
-           WhatsApp
-        </a>
+        <div class="image-wrap">
+          <img src="${fixDriveUrl(item.IMAGEN)}"
+               loading="lazy"
+               onerror="this.src='https://via.placeholder.com/400x400?text=Imagen+no+disponible'">
+          <div class="whatsapp">
+            <a target="_blank"
+              href="https://wa.me/573004847428?text=${encodeURIComponent(
+                'Hola, me interesa la referencia ' + (item.REFERENCIA || '')
+              )}">
+              Consultar por WhatsApp
+            </a>
+          </div>
+        </div>
+        <div class="content">
+          <span class="tag">${item.CATEGORIA || ''}</span>
+          <h3>${item.DESCRIPCION || 'SIN DESCRIPCIÓN'}</h3>
+          <div class="meta">
+            Ref: ${item.REFERENCIA || ''}<br>
+            Stock: ${item.CANTIDAD_EN_STOCK || ''}
+          </div>
+        </div>
       `;
 
       grid.appendChild(card);
     });
 
-  } catch (err) {
-    console.error("FETCH ERROR:", err);
-    document.body.innerHTML =
-      "<h2>Error cargando datos</h2><pre>" + err + "</pre>";
+  } catch (e) {
+    document.body.innerHTML = "<h2>Error cargando datos</h2><pre>" + e + "</pre>";
   }
-function fixDriveUrl(url) {
-  if (!url) return "";
-
-  const match = url.match(/[-\w]{25,}/);
-  if (!match) return url;
-
-  // Este dominio sirve la imagen como imagen real (no HTML)
-  return "https://lh3.googleusercontent.com/d/" + match[0];
-}
-
 }
 
 loadData();
 </script>
-
-
 
 </body>
 </html>
