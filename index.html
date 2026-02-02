@@ -5,7 +5,6 @@
   <title>Catálogo TherrA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Google Font elegante -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
   <style>
@@ -30,7 +29,6 @@
       display: flex;
       align-items: center;
       gap: 20px;
-      flex-wrap: wrap;
     }
 
     header img { height: 42px; }
@@ -39,31 +37,6 @@
       font-size: 18px;
       font-weight: 500;
       margin: 0;
-      letter-spacing: 0.5px;
-    }
-
-    /* FILTROS */
-    .filters {
-      padding: 0 32px 16px;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .filters button {
-      border: none;
-      background: #fff;
-      padding: 8px 14px;
-      border-radius: 20px;
-      font-size: 12px;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0,0,0,.05);
-      transition: .2s;
-    }
-
-    .filters button.active {
-      background: var(--dark);
-      color: #fff;
     }
 
     .grid {
@@ -98,29 +71,6 @@
       padding: 18px;
     }
 
-    .whatsapp {
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,.45);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: .25s;
-    }
-
-    .card:hover .whatsapp { opacity: 1; }
-
-    .whatsapp a {
-      background: var(--accent);
-      color: #fff;
-      padding: 12px 20px;
-      border-radius: 30px;
-      font-size: 14px;
-      font-weight: 600;
-      text-decoration: none;
-    }
-
     .content {
       padding: 18px 20px 22px;
     }
@@ -130,8 +80,8 @@
       text-transform: uppercase;
       letter-spacing: 1px;
       color: var(--muted);
-      margin-bottom: 6px;
       display: block;
+      margin-bottom: 6px;
     }
 
     h3 {
@@ -143,7 +93,29 @@
     .meta {
       font-size: 12px;
       color: var(--muted);
-      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 6px;
+      font-size: 13px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+
+    .btn {
+      display: block;
+      margin-top: 12px;
+      background: var(--accent);
+      color: white;
+      text-align: center;
+      padding: 10px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
     }
 
     footer {
@@ -158,11 +130,10 @@
 <body>
 
 <header>
-  <img src="https://therra.co/wp-content/uploads/2025/11/cropped-logotherrabbb.png" alt="TherrA">
+  <img src="https://therra.co/wp-content/uploads/2025/11/cropped-logotherrabbb.png">
   <h1>Catálogo de Herrajes</h1>
 </header>
 
-<div class="filters" id="filters"></div>
 <div class="grid" id="grid"></div>
 
 <footer>
@@ -173,7 +144,23 @@
 const API_URL =
   "https://script.google.com/macros/s/AKfycbwO-EJrvFYIttP_gwQlIj0EPjZWRg2qmdyTRIWTbfb3C68apWReNy9sK3KytG0kI4jNQA/exec";
 
-let allData = [];
+const LOGO_FALLBACK =
+  "https://therra.co/wp-content/uploads/2025/11/cropped-logotherrabbb.png";
+
+const ACABADOS = [
+  "Niquel Brillante",
+  "Niquel Mate",
+  "Niquel Negro",
+  "Onix",
+  "Oro Rosa",
+  "Cobre Pavón",
+  "Dorado",
+  "Latón Pavón",
+  "Niquel Free",
+  "GNC",
+  "Galvanizado Negro Mate",
+  "Otro (especificar)"
+];
 
 function normalizeKey(key) {
   return key.normalize("NFD")
@@ -183,12 +170,22 @@ function normalizeKey(key) {
 }
 
 function fixDriveUrl(url) {
-  if (!url) return "";
+  if (!url) return LOGO_FALLBACK;
   const match = url.match(/[-\w]{25,}/);
-  return match ? "https://lh3.googleusercontent.com/d/" + match[0] : url;
+  if (!match) return url;
+  return "https://lh3.googleusercontent.com/d/" + match[0];
 }
 
-function renderGrid(data) {
+async function loadData() {
+  const res = await fetch(API_URL);
+  const raw = JSON.parse(await res.text());
+
+  const data = raw.map(row => {
+    const o = {};
+    Object.keys(row).forEach(k => o[normalizeKey(k)] = row[k]);
+    return o;
+  });
+
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
 
@@ -199,60 +196,60 @@ function renderGrid(data) {
     card.innerHTML = `
       <div class="image-wrap">
         <img src="${fixDriveUrl(item.IMAGEN)}"
-             loading="lazy"
-             onerror="this.src='https://via.placeholder.com/400x400?text=Sin+Imagen'">
-        <div class="whatsapp">
-          <a target="_blank"
-            href="https://wa.me/573004847428?text=${encodeURIComponent(
-              'Hola, me interesa la referencia ' + (item.REFERENCIA || '')
-            )}">
-            Consultar por WhatsApp
-          </a>
-        </div>
+             onerror="this.src='${LOGO_FALLBACK}'">
       </div>
+
       <div class="content">
-        <span class="tag">${item.CATEGORIA || ''}</span>
-        <h3>${item.DESCRIPCION || ''}</h3>
+        <span class="tag">${item.CATEGORIA || ""}</span>
+        <h3>${item.DESCRIPCION || "SIN DESCRIPCIÓN"}</h3>
+
         <div class="meta">
-          Ref: ${item.REFERENCIA || ''}<br>
-          Stock: ${item.CANTIDAD_EN_STOCK || ''}
+          Ref: ${item.REFERENCIA || ""}<br>
+          Stock: ${item.CANTIDAD_EN_STOCK || ""}
         </div>
+
+        <select class="acabado">
+          ${ACABADOS.map(a => `<option value="${a}">${a}</option>`).join("")}
+        </select>
+
+        <input type="text"
+          class="acabado-custom"
+          placeholder="Escriba el acabado"
+          style="display:none">
+
+        <a class="btn" target="_blank">Consultar por WhatsApp</a>
       </div>
     `;
+
+    const select = card.querySelector(".acabado");
+    const input = card.querySelector(".acabado-custom");
+    const btn = card.querySelector(".btn");
+
+    function updateWhatsapp() {
+      const acabado =
+        select.value === "Otro (especificar)"
+          ? input.value || "No especificado"
+          : select.value;
+
+      const msg =
+        `Hola, me interesa la referencia ${item.REFERENCIA}\n` +
+        `Producto: ${item.DESCRIPCION}\n` +
+        `Acabado: ${acabado}`;
+
+      btn.href = "https://wa.me/573004847428?text=" + encodeURIComponent(msg);
+    }
+
+    select.onchange = () => {
+      input.style.display =
+        select.value === "Otro (especificar)" ? "block" : "none";
+      updateWhatsapp();
+    };
+
+    input.oninput = updateWhatsapp;
+
+    updateWhatsapp();
     grid.appendChild(card);
   });
-}
-
-function renderFilters(data) {
-  const filters = document.getElementById("filters");
-  const categorias = [...new Set(data.map(i => i.CATEGORIA).filter(Boolean))];
-
-  filters.innerHTML = `<button class="active" onclick="filterBy('ALL', this)">Todas</button>`;
-
-  categorias.forEach(cat => {
-    filters.innerHTML += `<button onclick="filterBy('${cat}', this)">${cat}</button>`;
-  });
-}
-
-function filterBy(cat, btn) {
-  document.querySelectorAll(".filters button").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
-
-  renderGrid(cat === "ALL" ? allData : allData.filter(i => i.CATEGORIA === cat));
-}
-
-async function loadData() {
-  const res = await fetch(API_URL);
-  const raw = JSON.parse(await res.text());
-
-  allData = raw.map(row => {
-    const o = {};
-    Object.keys(row).forEach(k => o[normalizeKey(k)] = row[k]);
-    return o;
-  });
-
-  renderFilters(allData);
-  renderGrid(allData);
 }
 
 loadData();
@@ -260,5 +257,6 @@ loadData();
 
 </body>
 </html>
+
 
 
