@@ -195,30 +195,6 @@ async function loadData() {
     data.forEach(item => {
       const card = document.createElement("div");
       card.className = "card";
-        // ===== FILTRO POR CATEGORIA =====
-      const catSelect = document.getElementById("catFilter");
-      
-      // Obtener categorias únicas
-      const categories = [...new Set(
-        data.map(i => i.CATEGORIA).filter(Boolean)
-      )];
-      
-      // Llenar select
-      catSelect.innerHTML =
-        `<option value="">Todas las categorías</option>` +
-        categories.map(c =>
-          `<option value="${c}">${c}</option>`
-        ).join("");
-      
-      // Evento de cambio
-      catSelect.onchange = () => {
-        renderCards(
-          data.filter(item =>
-            !catSelect.value || item.CATEGORIA === catSelect.value
-          )
-        );
-      };
-
 
       card.innerHTML = `
         <div class="image-wrap">
