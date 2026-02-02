@@ -197,21 +197,16 @@ async function loadData() {
   const res = await fetch(API_URL);
   const raw = JSON.parse(await res.text());
 
-  ALL_DATA = raw.map(row => {
-    const o = {};
-    Object.keys(row).forEach(k => o[normalizeKey(k)] = row[k]);
-    return o;
-  })
-  .filter(item =>
-    item.ESTADO &&
-    item.ESTADO.toString().toLowerCase().trim() === "ACTIVO WEB"
-  )
-
- /* ALL_DATA = raw.map(row => {
-    const o = {};
-    Object.keys(row).forEach(k => o[normalizeKey(k)] = row[k]);
-    return o;
-  });*/
+  ALL_DATA = raw
+    .map(row => {
+      const o = {};
+      Object.keys(row).forEach(k => o[normalizeKey(k)] = row[k]);
+      return o;
+    })
+    .filter(item =>
+      item.ESTADO &&
+      item.ESTADO.toString().toLowerCase().trim() === "activo web"
+    );
 
   buildCategoryFilter();
   renderCards(ALL_DATA);
@@ -307,6 +302,7 @@ loadData();
 
 </body>
 </html>
+
 
 
 
