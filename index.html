@@ -204,14 +204,14 @@ async function loadData() {
   })
   .filter(item =>
     item.ESTADO &&
-    item.ESTADO.toString().toLowerCase().trim() === "activo web"
+    item.ESTADO.toString().toLowerCase().trim() === "ACTIVO WEB"
   )
 
-  ALL_DATA = raw.map(row => {
+ /* ALL_DATA = raw.map(row => {
     const o = {};
     Object.keys(row).forEach(k => o[normalizeKey(k)] = row[k]);
     return o;
-  });
+  });*/
 
   buildCategoryFilter();
   renderCards(ALL_DATA);
@@ -227,12 +227,12 @@ function buildCategoryFilter() {
     `<option value="">Todas las categorías</option>` +
     categories.map(c => `<option value="${c}">${c}</option>`).join("");
 
- /* select.onchange = () => {
+  select.onchange = () => {
     const filtered = !select.value
       ? ALL_DATA
       : ALL_DATA.filter(i => i.CATEGORIA === select.value);
     renderCards(filtered);
-  };*/
+  };
 }
 
 function renderCards(data) {
