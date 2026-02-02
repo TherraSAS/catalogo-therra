@@ -39,6 +39,17 @@
       margin: 0;
     }
 
+    .filters {
+      padding: 0 32px 10px;
+    }
+
+    .filters select {
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      font-size: 14px;
+    }
+
     .grid {
       padding: 32px;
       display: grid;
@@ -61,7 +72,6 @@
     .image-wrap {
       background: #fafafa;
       aspect-ratio: 1 / 1;
-      position: relative;
     }
 
     .image-wrap img {
@@ -134,6 +144,12 @@
   <h1>Catálogo de Herrajes</h1>
 </header>
 
+<div class="filters">
+  <select id="catFilter">
+    <option value="">Todas las categorías</option>
+  </select>
+</div>
+
 <div class="grid" id="grid"></div>
 
 <footer>
@@ -172,20 +188,44 @@ function normalizeKey(key) {
 function fixDriveUrl(url) {
   if (!url) return LOGO_FALLBACK;
   const match = url.match(/[-\w]{25,}/);
-  if (!match) return url;
-  return "https://lh3.googleusercontent.com/d/" + match[0];
+  return match ? "https://lh3.googleusercontent.com/d/" + match[0] : url;
 }
+
+let ALL_DATA = [];
 
 async function loadData() {
   const res = await fetch(API_URL);
   const raw = JSON.parse(await res.text());
 
-  const data = raw.map(row => {
+  ALL_DATA = raw.map(row => {
     const o = {};
     Object.keys(row).forEach(k => o[normalizeKey(k)] = row[k]);
     return o;
   });
 
+  buildCategoryFilter();
+  renderCards(ALL_DATA);
+}
+
+function buildCategoryFilter() {
+  const select = document.getElementById("catFilter");
+  const categories = [...new Set(
+    ALL_DATA.map(i => i.CATEGORIA).filter(Boolean)
+  )];
+
+  select.innerHTML =
+    `<option value="">Todas las categorías</option>` +
+    categories.map(c => `<option value="${c}">${c}</option>`).join("");
+
+  select.onchange = () => {
+    const filtered = !select.value
+      ? ALL_DATA
+      : ALL_DATA.filter(i => i.CATEGORIA === select.value);
+    renderCards(filtered);
+  };
+}
+
+function renderCards(data) {
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
 
@@ -212,8 +252,8 @@ async function loadData() {
           ${ACABADOS.map(a => `<option value="${a}">${a}</option>`).join("")}
         </select>
 
-        <input type="text"
-          class="acabado-custom"
+        <input class="acabado-custom"
+          type="text"
           placeholder="Escriba el acabado"
           style="display:none">
 
@@ -246,8 +286,8 @@ async function loadData() {
     };
 
     input.oninput = updateWhatsapp;
-
     updateWhatsapp();
+
     grid.appendChild(card);
   });
 }
