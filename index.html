@@ -16,9 +16,7 @@
       --accent: #25d366;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -32,17 +30,40 @@
       display: flex;
       align-items: center;
       gap: 20px;
+      flex-wrap: wrap;
     }
 
-    header img {
-      height: 42px;
-    }
+    header img { height: 42px; }
 
     header h1 {
       font-size: 18px;
       font-weight: 500;
       margin: 0;
       letter-spacing: 0.5px;
+    }
+
+    /* FILTROS */
+    .filters {
+      padding: 0 32px 16px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .filters button {
+      border: none;
+      background: #fff;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,.05);
+      transition: .2s;
+    }
+
+    .filters button.active {
+      background: var(--dark);
+      color: #fff;
     }
 
     .grid {
@@ -56,7 +77,6 @@
       background: #fff;
       border-radius: 18px;
       overflow: hidden;
-      position: relative;
       transition: transform .25s ease, box-shadow .25s ease;
     }
 
@@ -66,9 +86,9 @@
     }
 
     .image-wrap {
-      position: relative;
       background: #fafafa;
       aspect-ratio: 1 / 1;
+      position: relative;
     }
 
     .image-wrap img {
@@ -86,16 +106,14 @@
       align-items: center;
       justify-content: center;
       opacity: 0;
-      transition: opacity .25s ease;
+      transition: .25s;
     }
 
-    .card:hover .whatsapp {
-      opacity: 1;
-    }
+    .card:hover .whatsapp { opacity: 1; }
 
     .whatsapp a {
       background: var(--accent);
-      color: white;
+      color: #fff;
       padding: 12px 20px;
       border-radius: 30px;
       font-size: 14px;
@@ -134,16 +152,6 @@
       font-size: 12px;
       color: #999;
     }
-
-    /* Mobile: mostrar WhatsApp al tocar */
-    @media (hover: none) {
-      .whatsapp {
-        opacity: 1;
-        background: linear-gradient(to top, rgba(0,0,0,.6), transparent);
-        align-items: flex-end;
-        padding-bottom: 16px;
-      }
-    }
   </style>
 </head>
 
@@ -154,6 +162,7 @@
   <h1>Catálogo de Herrajes</h1>
 </header>
 
+<div class="filters" id="filters"></div>
 <div class="grid" id="grid"></div>
 
 <footer>
@@ -163,6 +172,8 @@
 <script>
 const API_URL =
   "https://script.google.com/macros/s/AKfycbwO-EJrvFYIttP_gwQlIj0EPjZWRg2qmdyTRIWTbfb3C68apWReNy9sK3KytG0kI4jNQA/exec";
+
+let allData = [];
 
 function normalizeKey(key) {
   return key.normalize("NFD")
@@ -174,58 +185,74 @@ function normalizeKey(key) {
 function fixDriveUrl(url) {
   if (!url) return "";
   const match = url.match(/[-\w]{25,}/);
-  if (!match) return url;
-  return "https://lh3.googleusercontent.com/d/" + match[0];
+  return match ? "https://lh3.googleusercontent.com/d/" + match[0] : url;
+}
+
+function renderGrid(data) {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+
+  data.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <div class="image-wrap">
+        <img src="${fixDriveUrl(item.IMAGEN)}"
+             loading="lazy"
+             onerror="this.src='https://via.placeholder.com/400x400?text=Sin+Imagen'">
+        <div class="whatsapp">
+          <a target="_blank"
+            href="https://wa.me/573004847428?text=${encodeURIComponent(
+              'Hola, me interesa la referencia ' + (item.REFERENCIA || '')
+            )}">
+            Consultar por WhatsApp
+          </a>
+        </div>
+      </div>
+      <div class="content">
+        <span class="tag">${item.CATEGORIA || ''}</span>
+        <h3>${item.DESCRIPCION || ''}</h3>
+        <div class="meta">
+          Ref: ${item.REFERENCIA || ''}<br>
+          Stock: ${item.CANTIDAD_EN_STOCK || ''}
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function renderFilters(data) {
+  const filters = document.getElementById("filters");
+  const categorias = [...new Set(data.map(i => i.CATEGORIA).filter(Boolean))];
+
+  filters.innerHTML = `<button class="active" onclick="filterBy('ALL', this)">Todas</button>`;
+
+  categorias.forEach(cat => {
+    filters.innerHTML += `<button onclick="filterBy('${cat}', this)">${cat}</button>`;
+  });
+}
+
+function filterBy(cat, btn) {
+  document.querySelectorAll(".filters button").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+
+  renderGrid(cat === "ALL" ? allData : allData.filter(i => i.CATEGORIA === cat));
 }
 
 async function loadData() {
-  try {
-    const res = await fetch(API_URL);
-    const raw = JSON.parse(await res.text());
+  const res = await fetch(API_URL);
+  const raw = JSON.parse(await res.text());
 
-    const data = raw.map(row => {
-      const o = {};
-      Object.keys(row).forEach(k => o[normalizeKey(k)] = row[k]);
-      return o;
-    });
+  allData = raw.map(row => {
+    const o = {};
+    Object.keys(row).forEach(k => o[normalizeKey(k)] = row[k]);
+    return o;
+  });
 
-    const grid = document.getElementById("grid");
-    grid.innerHTML = "";
-        
-    data.forEach(item => {
-      const card = document.createElement("div");
-      card.className = "card";
-
-      card.innerHTML = `
-        <div class="image-wrap">
-          <img src="${fixDriveUrl(item.IMAGEN)}"
-               loading="lazy"
-               onerror="this.src='https://via.placeholder.com/400x400?text=Imagen+no+disponible'">
-          <div class="whatsapp">
-            <a target="_blank"
-              href="https://wa.me/573004847428?text=${encodeURIComponent(
-                'Hola, me interesa la referencia ' + (item.REFERENCIA || '')
-              )}">
-              Consultar por WhatsApp
-            </a>
-          </div>
-        </div>
-        <div class="content">
-          <span class="tag">${item.CATEGORIA || ''}</span>
-          <h3>${item.DESCRIPCION || 'SIN DESCRIPCIÓN'}</h3>
-          <div class="meta">
-            Ref: ${item.REFERENCIA || ''}<br>
-            Stock: ${item.CANTIDAD_EN_STOCK || ''}
-          </div>
-        </div>
-      `;
-
-      grid.appendChild(card);
-    });
-
-  } catch (e) {
-    document.body.innerHTML = "<h2>Error cargando datos</h2><pre>" + e + "</pre>";
-  }
+  renderFilters(allData);
+  renderGrid(allData);
 }
 
 loadData();
